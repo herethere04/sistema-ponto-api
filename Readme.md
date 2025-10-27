@@ -40,12 +40,12 @@ Para rodar este projeto em ambiente de desenvolvimento, você precisará ter ins
 
 ## Como Configurar e Rodar o Projeto
 
-1.  **Clone o Repositório:** (Se o projeto estivesse no Git)
+1.  **Clone o Repositório:**
     ```bash
-    git clone <url-do-repositorio>
+    git clone https://github.com/herethere04/sistema-ponto-api
     cd sistema-ponto-api
     ```
-    *(Apenas como exemplo, ajuste conforme necessário)*
+    
 
 2.  **Certifique-se que o Docker Desktop está rodando.**
 

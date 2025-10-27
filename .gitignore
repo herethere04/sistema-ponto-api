@@ -1,0 +1,32 @@
+# Arquivo: .gitignore
+
+# Dependências e Binários
+**/bin/
+**/obj/
+**/packages/
+**/node_modules/
+
+# Arquivos do Usuário/IDE
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vs/
+.vscode/ # Se você não quiser compartilhar configurações do VS Code
+
+# Arquivos de Build/Publicação
+**/publish/
+
+# Arquivos de Configuração Local (IMPORTANTE PARA SEGURANÇA)
+# Se você colocou segredos (como chaves de API reais) aqui, ignore-o.
+# Se appsettings.Development.json contém apenas strings de conexão locais
+# como a nossa, pode ser seguro incluí-lo, mas seja CUIDADOSO.
+# Por segurança, vamos ignorá-lo por padrão:
+**/appsettings.Development.json
+
+# Arquivos do Docker
+docker-compose.override.yml
+
+# Outros
+*.DS_Store
+Thumbs.db

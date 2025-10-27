@@ -1,0 +1,30 @@
+services:
+  # Serviço da nossa API .NET
+  api:
+    container_name: sistema-ponto-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080" # Mapeia a porta 8080 da sua máquina para a porta 8080 do container
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080 # Diz para a API rodar na porta 8080 dentro do container
+    depends_on:
+      - db # Garante que o banco de dados inicie antes da API
+
+  # Serviço do Banco de Dados PostgreSQL
+  db:
+    container_name: sistema-ponto-db
+    image: postgres:15
+    ports:
+      - "5432:5432" # Mapeia a porta padrão do PostgreSQL
+    environment:
+      - POSTGRES_USER=pontouser
+      - POSTGRES_PASSWORD=pontopass
+      - POSTGRES_DB=sistemaponto
+    volumes:
+      - postgres-data:/var/lib/postgresql/data # Garante que os dados do banco não sejam perdidos
+
+volumes:
+  postgres-data: # Define o volume para persistência de dados

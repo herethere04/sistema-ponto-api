@@ -73,7 +73,7 @@ function renderEmployeeDashboard() {
     document.getElementById('logout-btn').addEventListener('click', handleLogout);
 }
 
-// --- FUNÇÃO: RENDERIZAR LOGIN DO FUNCIONÁRIO (COM VERIFICAÇÃO DE PERFIL) ---
+// --- FUNÇÃO: RENDERIZAR LOGIN DO FUNCIONÁRIO ---
 function renderLoginScreen() {
     const loginHTML = `
         <div class="container">
@@ -139,13 +139,13 @@ async function handleDeactivateUser(userId) {
     }
 
     // Pede confirmação antes de desativar
-    if (!confirm(`Tem certeza que deseja desativar o usuário com ID: ${userId}? Esta ação não pode ser desfeita facilmente.`)) {
+    if (!confirm(`Tem certeza que deseja desativar o usuário com ID: ${userId}?`)) {
         return; // Cancela se o usuário clicar em "Não"
     }
 
     try {
         const response = await fetch(`${API_BASE_URL}/usuarios/${userId}/desativar`, {
-            method: 'PATCH', // Usamos PATCH para atualizar parcialmente
+            method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${token}`
                 // Não precisamos de 'Content-Type' pois não estamos enviando corpo
@@ -161,15 +161,19 @@ async function handleDeactivateUser(userId) {
         } else if (response.status === 404) {
              alert("Erro: Usuário não encontrado.");
         } else {
-            const errorData = await response.json().catch(() => ({}));
-            alert(`Erro ${response.status} ao desativar usuário: ${errorData.message || 'Erro desconhecido'}`);
+            // Tenta ler a mensagem de erro da API, se houver
+            let errorMsg = 'Erro desconhecido ao desativar usuário.';
+            try {
+                 const errorData = await response.json();
+                 errorMsg = errorData.message || errorMsg;
+            } catch(e) { /* Ignora se não conseguir ler o JSON */ }
+            alert(`Erro ${response.status} ao desativar usuário: ${errorMsg}`);
         }
     } catch (error) {
         console.error('Erro de rede ao desativar usuário:', error);
         alert('Não foi possível conectar à API para desativar o usuário.');
     }
 }
-
 
 // --- FUNÇÃO ATUALIZADA: CARREGAR LISTA DE FUNCIONÁRIOS ---
 async function loadEmployeeList() {
@@ -217,7 +221,6 @@ async function loadEmployeeList() {
             document.querySelectorAll('.btn-desativar').forEach(button => {
                 button.addEventListener('click', () => {
                     const userId = button.getAttribute('data-userid');
-                    console.log("Tentando desativar usuário com ID:", userId);
                     handleDeactivateUser(userId); // Chama a nova função
                 });
             });

@@ -68,7 +68,7 @@ p {
     color: #f2f2f7;
     border: 1px solid #555;
     box-sizing: border-box;
-} /* <--- A CHAVE FALTANTE FOI ADICIONADA AQUI */
+} 
 
 .btn-primary {
     background-color: #0A84FF;

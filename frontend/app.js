@@ -240,22 +240,93 @@ async function loadEmployeeList() {
 }
 
 
-// --- FUNÇÃO: RENDERIZAR DASHBOARD DO ADMIN ---
+// --- FUNÇÃO ATUALIZADA: RENDERIZAR DASHBOARD DO ADMIN ---
 function renderAdminDashboard() {
-     const dashboardHTML = `
-        <div class="container" style="max-width: 600px;">
+    const dashboardHTML = `
+        <div class="container" style="max-width: 800px;">
             <h1>Dashboard do Administrador</h1>
+            
+            <div style="background-color: #2c2c2e; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
+                <h3 style="margin-top: 0;">Cadastrar Novo Funcionário</h3>
+                <form id="create-user-form" style="display: grid; gap: 10px; grid-template-columns: 1fr 1fr; align-items: end;">
+                    <div class="form-group" style="margin: 0;">
+                        <label for="new-nome">Nome Completo</label>
+                        <input type="text" id="new-nome" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label for="new-matricula">Matrícula</label>
+                        <input type="text" id="new-matricula" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label for="new-senha">Senha Inicial</label>
+                        <input type="text" id="new-senha" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="height: 46px;">Cadastrar</button>
+                </form>
+            </div>
+
             <p>Lista de Funcionários Cadastrados:</p>
-            <div id="employee-list" style="text-align: left; margin-bottom: 2rem; max-height: 400px; overflow-y: auto; background-color: #2c2c2e; padding: 10px; border-radius: 8px;">Carregando lista de funcionários...</div>
-            <div class="btn-group" style="margin-top: 20px;">
+            <div id="employee-list" style="text-align: left; margin-bottom: 2rem; max-height: 400px; overflow-y: auto; background-color: #2c2c2e; padding: 10px; border-radius: 8px;">
+                Carregando lista...
+            </div>
+
+            <div class="btn-group">
                 <button id="logout-btn" class="btn">Sair (Logout)</button>
             </div>
         </div>
     `;
     appContainer.innerHTML = dashboardHTML;
+
+    // Event Listeners
     document.getElementById('logout-btn').addEventListener('click', handleLogout);
+    
+    // Lógica de Cadastro
+    document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleCreateUser();
+    });
 
     loadEmployeeList();
+}
+
+// --- NOVA FUNÇÃO: CADASTRAR USUÁRIO (CHAMADA PELO FORMULÁRIO) ---
+async function handleCreateUser() {
+    const token = localStorage.getItem('jwt_token');
+    const nome = document.getElementById('new-nome').value;
+    const matricula = document.getElementById('new-matricula').value;
+    const senha = document.getElementById('new-senha').value;
+
+    // Nota: O backend espera "CriarUsuarioDto". Precisamos ver se o backend pede "Perfil"
+    // Assumindo que o padrão do backend é criar "Funcionário" se não especificarmos, ou mandamos Perfil = 1 (Funcionario)
+    const payload = {
+        nomeCompleto: nome,
+        matricula: matricula,
+        senha: senha,
+        perfil: 1 // 1 = Funcionario (Baseado no seu Enum padrão, verifique se é 0 ou 1 no C#)
+    };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/usuarios`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            alert('Funcionário cadastrado com sucesso!');
+            document.getElementById('create-user-form').reset(); // Limpa o formulário
+            loadEmployeeList(); // Atualiza a lista na hora
+        } else {
+            const errorData = await response.json();
+            alert(`Erro ao cadastrar: ${errorData.message || 'Verifique os dados.'}`);
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro de conexão ao cadastrar usuário.');
+    }
 }
 
 // --- FUNÇÃO: RENDERIZAR LOGIN DO ADMIN ---

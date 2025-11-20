@@ -2,11 +2,10 @@ name: Build e Deploy - Sistema Ponto
 
 on:
   push:
-    branches: [ "main" ] # Dispara sempre que você mandar código para a main
-  workflow_dispatch:      # Permite disparar manualmente se precisar
+    branches: [ "main" ]
+  workflow_dispatch:
 
 env:
-  # Nomes exatos dos recursos Azure
   AZURE_CONTAINER_REGISTRY: "acrsistemapontoab"
   CONTAINER_APP_NAME: "app-sistema-ponto-api-ab"
   RESOURCE_GROUP: "rg-sistema-ponto"
@@ -17,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Baixar Código (Checkout)
+      - name: 📥 Baixar Código
         uses: actions/checkout@v4
 
       - name: 🔑 Login no Azure
@@ -50,7 +49,7 @@ jobs:
           imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
           targetPort: 8080
           
-          # Configura a conexão com o banco AUTOMATICAMENTE
+          # AQUI ESTÃO AS VARIÁVEIS DE PRODUÇÃO
           environmentVariables: |
             ConnectionStrings__DefaultConnection=Host=app-sistema-ponto-db;Port=5432;Database=sistemaponto;Username=pontouser;Password=pontopass
             JwtSettings__Secret=UmaChaveMuitoSecretaParaAssinarOsTokens123!

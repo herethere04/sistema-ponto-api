@@ -95,10 +95,12 @@ using (var scope = app.Services.CreateScope())
     {
         var dbContext = services.GetRequiredService<AppDbContext>();
         
-        // A. Roda Migrations sempre (Produção e Dev), mas protege os testes em memória
+        // A. GARANTIA DE TABELAS (Alterado para EnsureCreated)
         if (dbContext.Database.IsRelational())
         {
-            dbContext.Database.Migrate();
+            // CORREÇÃO AQUI: Trocamos Migrate() por EnsureCreated()
+            // Isso cria as tabelas imediatamente se elas não existirem.
+            dbContext.Database.EnsureCreated();
         }
 
         // B. Cria Admin Padrão se não existir ninguém
@@ -110,13 +112,9 @@ using (var scope = app.Services.CreateScope())
             {
                 NomeCompleto = "Administrador do Sistema",
                 Matricula = "admin", 
-                // CORREÇÃO: Propriedade correta é 'Senha'
                 Senha = passwordHasher.HashPassword("admin123"), 
-                // CORREÇÃO: Enum correto é 'TipoUsuarioEnum.ADMIN'
                 TipoUsuario = TipoUsuarioEnum.ADMIN,
-                // CORREÇÃO: Enum correto é 'StatusUsuarioEnum.ATIVO'
                 Status = StatusUsuarioEnum.ATIVO,
-                // CORREÇÃO: Propriedade correta é 'CreatedAt'
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };

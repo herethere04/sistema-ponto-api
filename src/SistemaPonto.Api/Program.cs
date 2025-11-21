@@ -1,5 +1,3 @@
-// Arquivo: src/SistemaPonto.Api/Program.cs
-
 using Microsoft.EntityFrameworkCore;
 using SistemaPonto.Infrastructure.Persistence;
 using SistemaPonto.Application.Interfaces;
@@ -10,13 +8,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SistemaPonto.Infrastructure.Auth;
 using Microsoft.OpenApi.Models;
-using SistemaPonto.Domain.Entities; // Importante para ver Usuario e Enums
+using SistemaPonto.Domain.Entities;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Configuração de CORS ---
+// 1. Configuração de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
@@ -28,12 +26,12 @@ builder.Services.AddCors(options =>
                       });
 });
 
-// --- 2. Banco de Dados ---
+// 2. Banco de Dados
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// --- 3. Injeção de Dependência ---
+// 3. Injeção de Dependência
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IRegistroPontoRepository, RegistroPontoRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
@@ -41,7 +39,7 @@ builder.Services.AddScoped<IRegistroPontoService, RegistroPontoService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IPasswordHasherService, PasswordHasherService>();
 
-// --- 4. Autenticação JWT ---
+// 4. Autenticação JWT
 var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtSettings:Secret"]!);
 builder.Services.AddAuthentication(options =>
 {
@@ -87,50 +85,11 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// --- 5. BLOCO DE INICIALIZAÇÃO DO BANCO (MIGRAÇÃO + SEED ADMIN) ---
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var dbContext = services.GetRequiredService<AppDbContext>();
-        
-        // A. GARANTIA DE TABELAS (Alterado para EnsureCreated)
-        if (dbContext.Database.IsRelational())
-        {
-            // CORREÇÃO AQUI: Trocamos Migrate() por EnsureCreated()
-            // Isso cria as tabelas imediatamente se elas não existirem.
-            dbContext.Database.EnsureCreated();
-        }
+// --- AQUI APAGAMOS O BLOCO DE INICIALIZAÇÃO AUTOMÁTICA ---
+// O banco agora será criado apenas chamando /api/setup
+// ---------------------------------------------------------
 
-        // B. Cria Admin Padrão se não existir ninguém
-        if (!dbContext.Usuarios.Any())
-        {
-            var passwordHasher = services.GetRequiredService<IPasswordHasherService>();
-            
-            var adminUser = new Usuario
-            {
-                NomeCompleto = "Administrador do Sistema",
-                Matricula = "admin", 
-                Senha = passwordHasher.HashPassword("admin123"), 
-                TipoUsuario = TipoUsuarioEnum.ADMIN,
-                Status = StatusUsuarioEnum.ATIVO,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            dbContext.Usuarios.Add(adminUser);
-            dbContext.SaveChanges();
-            Console.WriteLine("✅ Admin padrão criado: admin / admin123");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"❌ Erro ao inicializar o banco: {ex.Message}");
-    }
-}
-
-// Swagger só em Development
+// Swagger só aparece em Desenvolvimento (Local)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -145,5 +104,4 @@ app.MapControllers();
 
 app.Run();
 
-// Necessário para os testes de integração
 public partial class Program { }

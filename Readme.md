@@ -22,21 +22,3 @@ git fetch --all
 
 # 2. Mude para a branch do MVP
 git checkout MVP
-
-## 🛠️ O que está sendo feito nesta branch (`main`)?
-
-Estamos migrando a arquitetura do sistema de uma execução local monolítica para uma arquitetura moderna de **microsserviços serverless na nuvem Microsoft Azure**.
-
-### Arquitetura e Infraestrutura Cloud:
-* **Backend (API):** Hospedado no **Azure Container Apps**. A API escala automaticamente e roda em ambiente isolado.
-* **Banco de Dados:** PostgreSQL rodando como um container seguro dentro do mesmo **Azure Container Apps Environment** da API. A comunicação é feita via rede privada interna (TCP), sem exposição para a internet pública.
-* **Frontend:** Hospedado no **Azure Static Web Apps**, garantindo distribuição global e alta performance.
-* **DevOps (CI/CD):** Pipeline completa com **GitHub Actions**. A cada `push` nesta branch, o código é compilado, a imagem Docker é construída e o ambiente de produção é atualizado automaticamente.
-
-### Estrutura de Branches do Projeto
-
-| Branch | Status | Objetivo |
-| :--- | :--- | :--- |
-| **`MVP`** | 🟢 **Estável** | Versão funcional para rodar localmente com Docker Compose. Use esta para testes, validação e apresentações. |
-| **`main`** | 🟠 **Em Configuração** | Foco em Infraestrutura, Azure e Automação. Contém configurações de produção (Cloud). |
-| **`v2-react`** | 🔵 **Em Desenvolvimento** | Nova interface moderna sendo construída em React.js com melhorias de UX/UI. |

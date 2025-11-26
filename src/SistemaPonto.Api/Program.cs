@@ -10,19 +10,17 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SistemaPonto.Infrastructure.Auth;
 using Microsoft.OpenApi.Models;
-using SistemaPonto.Domain.Entities; // Importante para ver Usuario e Enums
-
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+using SistemaPonto.Domain.Entities; // <--- Os Enums estão aqui dentro
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Configuração de CORS ---
+// --- 1. Configuração de CORS (Liberado para Localhost) ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyAllowSpecificOrigins,
+    options.AddPolicy(name: "_myAllowSpecificOrigins",
                       policy  =>
                       {
-                          policy.AllowAnyOrigin() 
+                          policy.AllowAnyOrigin() // Libera geral para facilitar a demo local
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
@@ -41,7 +39,7 @@ builder.Services.AddScoped<IRegistroPontoService, RegistroPontoService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IPasswordHasherService, PasswordHasherService>();
 
-// --- 4. Autenticação JWT ---
+// --- 4. Autenticação ---
 var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtSettings:Secret"]!);
 builder.Services.AddAuthentication(options =>
 {
@@ -87,7 +85,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// --- 5. BLOCO DE INICIALIZAÇÃO DO BANCO (MIGRAÇÃO + SEED ADMIN) ---
+// --- 5. PREPARAÇÃO DO AMBIENTE LOCAL (CRIAÇÃO AUTOMÁTICA) ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -95,52 +93,46 @@ using (var scope = app.Services.CreateScope())
     {
         var dbContext = services.GetRequiredService<AppDbContext>();
         
-        // A. Roda Migrations sempre (Produção e Dev), mas protege os testes em memória
+        // FORÇA A CRIAÇÃO DO BANCO LOCALMENTE
+        // EnsureCreated é perfeito para demos locais: se não tem tabela, ele cria tudo agora.
         if (dbContext.Database.IsRelational())
         {
-            dbContext.Database.Migrate();
+             dbContext.Database.EnsureCreated();
         }
 
-        // B. Cria Admin Padrão se não existir ninguém
+        // SEED: Cria o Admin se estiver vazio
         if (!dbContext.Usuarios.Any())
         {
             var passwordHasher = services.GetRequiredService<IPasswordHasherService>();
             
             var adminUser = new Usuario
             {
-                NomeCompleto = "Administrador do Sistema",
-                Matricula = "admin", 
-                // CORREÇÃO: Propriedade correta é 'Senha'
-                Senha = passwordHasher.HashPassword("admin123"), 
-                // CORREÇÃO: Enum correto é 'TipoUsuarioEnum.ADMIN'
-                TipoUsuario = TipoUsuarioEnum.ADMIN,
-                // CORREÇÃO: Enum correto é 'StatusUsuarioEnum.ATIVO'
-                Status = StatusUsuarioEnum.ATIVO,
-                // CORREÇÃO: Propriedade correta é 'CreatedAt'
+                NomeCompleto = "Administrador Local",
+                Matricula = "admin",
+                Senha = passwordHasher.HashPassword("admin123"),
+                TipoUsuario = TipoUsuarioEnum.ADMIN, // Agora ele vai encontrar
+                Status = StatusUsuarioEnum.ATIVO,    // Agora ele vai encontrar
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
             dbContext.Usuarios.Add(adminUser);
             dbContext.SaveChanges();
-            Console.WriteLine("✅ Admin padrão criado: admin / admin123");
+            Console.WriteLine("✅✅✅ ADMIN LOCAL CRIADO: admin / admin123");
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"❌ Erro ao inicializar o banco: {ex.Message}");
+        Console.WriteLine($"❌ Erro no Setup Local: {ex.Message}");
     }
 }
 
-// Swagger só em Development
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger sempre ativo para facilitar sua apresentação
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
-app.UseCors(MyAllowSpecificOrigins);
+//app.UseHttpsRedirection();//
+app.UseCors("_myAllowSpecificOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

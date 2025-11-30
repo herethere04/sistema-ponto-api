@@ -133,7 +133,6 @@ docker-compose up --build
 
 Após a primeira execução, apenas `docker-compose up` será suficiente.
 
----
 
 ### 3. Caso dê erro de tabela ou de api é um "race condition", apenas use este comando no terminal na pasta raiz
 

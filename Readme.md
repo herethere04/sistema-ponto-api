@@ -135,6 +135,12 @@ Após a primeira execução, apenas `docker-compose up` será suficiente.
 
 ---
 
+### 3. Caso dê erro de tabela ou de api é um "race condition", apenas use este comando no terminal na pasta raiz
+
+```bash
+docker restart sistema-ponto-api
+```
+
 ## Acessando a Aplicação
 
 - **Frontend:** Abra `frontend/index.html` usando Live Server / Live Preview ou diretamente no navegador.  

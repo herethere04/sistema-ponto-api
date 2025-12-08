@@ -118,7 +118,7 @@ sequenceDiagram
 ```bash
 git clone https://github.com/herethere04/sistema-ponto-api
 cd sistema-ponto-api
-git checkout mvp
+git checkout MVP
 ```
 
 Certifique-se de que o Docker Desktop está rodando.

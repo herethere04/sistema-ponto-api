@@ -1,18 +1,32 @@
 import React from 'react';
-import { LayoutDashboard, Users, UserCog, LogOut, Clock } from 'lucide-react';
+import { LayoutDashboard, Users, UserCog, LogOut, Clock, CalendarDays } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { getUserRole } from '../utils/auth';
+
+import { logoutUser } from '../services/api';
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const role = getUserRole();
 
-  const menuItems = [
-    { icon: LayoutDashboard, text: "Painel", path: "/admin/dashboard" },
-    { icon: Users, text: "Funcionários", path: "/admin/funcionarios" },
-    { icon: UserCog, text: "Administradores", path: "/admin/admins" },
-    // NOVO ITEM ADICIONADO:
-    { icon: Clock, text: "Meu Ponto (Teste)", path: "/funcionario/ponto" },
+  // All possible menu items
+  const allMenuItems = [
+    { icon: LayoutDashboard, text: "Painel", path: "/admin/dashboard", role: "ADMIN" },
+    { icon: Users, text: "Funcionários", path: "/admin/funcionarios", role: "ADMIN" },
+    { icon: UserCog, text: "Administradores", path: "/admin/admins", role: "ADMIN" },
+    { icon: Clock, text: "Meu Ponto", path: "/funcionario/ponto", role: "FUNCIONARIO" },
+    { icon: CalendarDays, text: "Meu Histórico", path: "/funcionario/historico", role: "FUNCIONARIO" },
   ];
+
+  // Filter based on user role
+  const menuItems = allMenuItems.filter(item => item.role === role);
+
+  const handleLogout = async () => {
+    await logoutUser();
+    localStorage.removeItem('user_role');
+    navigate('/');
+  };
 
   return (
     <div style={{
@@ -32,7 +46,7 @@ const Sidebar = () => {
       <div style={{ marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ width: '32px', height: '32px', background: '#0A84FF', borderRadius: '8px' }}></div>
         <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: '#fff' }}>
-          Sistema <span style={{fontWeight: '300'}}>Ponto</span>
+          Sistema <span style={{ fontWeight: '300' }}>Ponto</span>
         </h2>
       </div>
 
@@ -41,7 +55,7 @@ const Sidebar = () => {
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <div 
+            <div
               key={item.path}
               onClick={() => navigate(item.path)}
               style={{
@@ -66,8 +80,9 @@ const Sidebar = () => {
       </nav>
 
       {/* Logout */}
-      <div 
-        onClick={() => navigate('/')}
+      <div
+        onClick={handleLogout}
+        className="btn-hover"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -77,11 +92,12 @@ const Sidebar = () => {
           cursor: 'pointer',
           borderTop: '1px solid #3a3a3c',
           marginTop: 'auto',
-          paddingTop: '24px'
+          paddingTop: '24px',
+          transition: 'all 0.2s'
         }}
       >
         <LogOut size={20} />
-        <span style={{fontSize: '0.95rem'}}>Sair do Sistema</span>
+        <span style={{ fontSize: '0.95rem' }}>Sair do Sistema</span>
       </div>
     </div>
   );

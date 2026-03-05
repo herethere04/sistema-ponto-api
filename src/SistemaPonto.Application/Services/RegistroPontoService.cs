@@ -52,4 +52,16 @@ public class RegistroPontoService : IRegistroPontoService
             UsuarioId = registroSalvo.UsuarioId
         };
     }
+    public async Task<IEnumerable<RegistroPontoDto>> ObterHistoricoUsuarioAsync(int usuarioId)
+    {
+        var registros = await _registroPontoRepository.ObterHistoricoUsuarioAsync(usuarioId);
+        
+        return registros.Select(r => new RegistroPontoDto
+        {
+            Id = r.Id,
+            Timestamp = r.Timestamp,
+            TipoRegistro = r.TipoRegistro.ToString(),
+            UsuarioId = r.UsuarioId
+        });
+    }
 }

@@ -8,6 +8,8 @@ using SistemaPonto.Application.Services;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using SistemaPonto.Infrastructure.Auth;
 using Microsoft.OpenApi.Models;
 using SistemaPonto.Domain.Entities; // Importante para ver Usuario e Enums
@@ -22,9 +24,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy  =>
                       {
-                          policy.AllowAnyOrigin() 
+                          policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
                                 .AllowAnyHeader()
-                                .AllowAnyMethod();
+                                .AllowAnyMethod()
+                                .AllowCredentials(); // Habilita o envio de Cookies gerados pelo backend
                       });
 });
 
@@ -40,6 +43,18 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IRegistroPontoService, RegistroPontoService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IPasswordHasherService, PasswordHasherService>();
+
+// --- 3.5. Proteção contra Brute Force (Rate Limiting) ---
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter(policyName: "LoginPolicy", options =>
+    {
+        options.PermitLimit = 5; // Máximo de 5 tentativas de login
+        options.Window = TimeSpan.FromMinutes(1); // Dentro de uma janela de 1 minuto
+        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        options.QueueLimit = 0; // Se bater o limite, rejeita na hora as demais tentativas (status 429)
+    });
+});
 
 // --- 4. Autenticação JWT ---
 var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtSettings:Secret"]!);
@@ -58,6 +73,18 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = false,
         ValidateAudience = false
+    };
+    options.Events = new JwtBearerEvents
+    {
+        // Intercepta a requisição e busca o token no Cookie HttpOnly ao invés do Header Bearer
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Cookies.ContainsKey("jwt_token"))
+            {
+                context.Token = context.Request.Cookies["jwt_token"];
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -141,6 +168,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins);
+
+// Middleware crucial para garantir que bloqueios de taxa rodem ANTES dos controllers processarem auth
+app.UseRateLimiter(); 
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

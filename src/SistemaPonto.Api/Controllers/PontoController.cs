@@ -40,4 +40,26 @@ public class PontoController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpGet("historico")]
+    [Authorize(Roles = "FUNCIONARIO")] // <-- Protege o endpoint
+    public async Task<IActionResult> ObterHistorico()
+    {
+        try
+        {
+            var usuarioIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(usuarioIdClaim))
+            {
+                return Unauthorized("Token inválido: ID do usuário não encontrado.");
+            }
+
+            var usuarioId = int.Parse(usuarioIdClaim);
+            var historico = await _registroPontoService.ObterHistoricoUsuarioAsync(usuarioId);
+            return Ok(historico);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

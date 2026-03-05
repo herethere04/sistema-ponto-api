@@ -1,45 +1,94 @@
-# Sistema de Ponto - Frontend Moderno (v2.0) ⚛️
+# Sistema de Ponto (API .NET Core + Web React)
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-![Javascript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+## Descrição
 
-> **Status:** 🚧 Em Desenvolvimento (Alpha)
-
-Esta branch (`v2-react`) contém a **nova interface do usuário** do sistema, reescrita do zero utilizando **React + Vite** para oferecer uma experiência mais fluida, moderna e escalável. O objetivo é substituir o frontend legado (v1.0) por esta versão SPA (Single Page Application).
+Este projeto é uma solução fullstack moderna para registro e gestão de ponto de funcionários. A versão atual (**v2-react**) aposentou o antigo layout estático em prol de um robusto **Frontend SPA em React**, acoplado a uma API RESTful escalável construída em **C# com .NET 8**. O sistema introduz Controle de Acesso Baseado em Níveis (RBAC), separando as interfaces, permissões e experiências entre **Administradores** e **Funcionários**, garantindo produtividade e alta segurança.
 
 ---
 
-## 🚀 Novidades e Melhorias (vs v1.0)
+## Arquitetura e Tecnologias
 
-* **Design Profissional (Dark Mode):** Interface inspirada em sistemas corporativos líderes de mercado (ex: Control iD), com foco em ergonomia visual.
-* **Navegação SPA:** Troca de telas instantânea sem recarregamento da página, utilizando `React Router`.
-* **Componentização:** Uso de componentes reutilizáveis (Sidebar, Badges, Modais, Toasts) para facilitar a manutenção.
-* **Funcionalidades Exclusivas:**
-    * 🕓 **Relógio em Tempo Real:** Display grande e preciso para o funcionário.
-    * 🔔 **Toasts:** Notificações não intrusivas (substituindo os `alert` nativos).
-    * 🛡️ **Login Inteligente:** Redirecionamento automático baseado no perfil (Admin vai para Dashboard, Funcionário vai para Ponto).
+###  Backend (API RESTful)
+* **Linguagem & Framework:** C# com .NET 8.
+* **Arquitetura:** Clean Architecture com forte separação de camadas (Domain, Application, Infrastructure, Api).
+* **Banco de Dados:** PostgreSQL (orquestrado dinamicamente via Docker).
+* **ORM:** Entity Framework Core 8.
+* **Autenticação:** JWT (JSON Web Tokens) através de Cookies de segurança.
+* **Documentação:** Swagger Completo (OpenAPI).
 
-## 🛠️ Tecnologias Utilizadas
-
-* **Core:** React 18, Vite
-* **Roteamento:** React Router Dom
-* **Ícones:** Lucide React
-* **Estilização:** CSS Moderno (Variables, Flexbox, Grid)
-* **Integração:** Fetch API (com arquitetura de Services)
+###  Frontend (Single Page Application)
+* **Core:** React 18, alimentado por Vite para compilação super rápida.
+* **Roteamento:** React Router DOM com proteção `ProtectedRoute` verificando os cargos/níveis.
+* **Componentes Gráficos:** Lucide React para iconografia vetorial.
+* **Estética:** Design system customizado em CSS moderno suportando Dark Theme (tons ricos e suaves, inspirados em painéis OLED).
 
 ---
 
-## 💻 Como Rodar este Frontend
+## Funcionalidades Principais
 
-Como esta versão é focada no Frontend moderno, você precisará do **Node.js** instalado.
+### Visão do Administrador
+* 📊 **Dashboard Analítico:** Resumo de dados de uso do sistema, ativos na tela inicial.
+* 👨‍💼 **Gestão de Funcionários & Administradores:** Listagem, registro, desativação de contas e controle restrito.
+* 🕒 **Gerência de Ponto:** Capacidade técnica via frontend (Botão Ajuste de Ponto) pronta para correções manuais de horas de empregados.
 
-### 1. Instalação das Dependências
-O código fonte do React reside na pasta `sistema-ponto-v2`.
+### Visão do Funcionário
+* ⏱️ **Relógio Dinâmico "Meu Ponto":** Calculadora real-time que processa a diferença de ms de cada batida "ENTRADA" e "SAÍDA" no servidor.
+* 📅 **Extrato Diário "Meu Histórico":** Consulta particular dos pontos agrupados por dia, reportando o saldo/banco de horas no mês.
 
+---
+
+## Passos de Segurança Implementados
+
+Visando tornar esse software viável para cenários corporativos contra vetores de ataque comuns web:
+
+1. **HttpOnly Cookies na Sessão (Prevenção XSS):** O sistema não exibe nem carrega mais os JWTs abertamente via LocalStorage, mitigando a chance de roubo de sessão em cenários Cross-Site Scripting.
+2. **Rate Limiting Nativo C# (Prevenção Força Bruta):** O Endpoint de Login limita conexões massivas. Um usuário ou bot que tentar realizar múltiplos logins errôneos seguidos será bloqueado por um temporizador `HTTP 429 Too Many Requests`.
+3. **ORM Blindado (Prevenção SQL Injection):** Todo tráfego banco/código é filtrado e parametrizado nativamente pelo EF Core.
+4. **Hashing Criptográfico Avançado:** BCrypt protegendo armazenamento de senhas de todos os usuários de forma unidirecional.
+
+---
+
+## Como Baixar e Rodar (Localmente)
+
+**Pré-requisitos:**
+* [Node.js (v18+)](https://nodejs.org/)
+* [Docker Desktop](https://www.docker.com/products/docker-desktop)
+* [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+### 1. Clonando o Repositório
+Baixe o sistema especificamente na branch do Frontend em React:
 ```bash
-# Entre na pasta do projeto
-cd sistema-ponto-v2
+git clone -b v2-react https://github.com/herethere04/sistema-ponto-api
+cd sistema-ponto-api
+```
 
-# Instale os pacotes
+### 2. Inicializando o Servidor & Banco de Dados (Backend)
+Na pasta raiz (`sistema-ponto-api`), rode o Docker Compose. Ele baixará as imagens do Postgres e compilará isoladamente toda sua infraestrutura .NET.
+```bash
+docker-compose up --build -d
+```
+*(Nas próximas execuções, um simples `docker-compose up` será suficiente).*
+
+### 3. Executando a Interface Web (Frontend)
+Abra outro terminal, e acesse o diretório local do app React:
+```bash
+cd sistema-ponto-v2
 npm install
+npm run dev
+```
+
+### 4. Links de Acesso
+O ambiente estará rodando imediatamente em:
+* **Interface React (Frontend):** `http://localhost:5173`
+* **Swagger (Documentação C#):** `http://localhost:8080/swagger`
+
+---
+
+## Credenciais Padrão do Sistema
+O Backend é inteligente e faz um "Seed" (Plantio) automático da base de dados se estiver vazia. Para acessar instantaneamente:
+
+* **Login (Matrícula da Conta Admin):** `admin`
+* **Senha:** `admin123`
+
+---
+🔗 **Link do Repositório GitHub Oficial:** [https://github.com/herethere04/sistema-ponto-api/tree/v2-react](https://github.com/herethere04/sistema-ponto-api/tree/v2-react)

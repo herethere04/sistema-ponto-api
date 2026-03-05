@@ -35,4 +35,11 @@ public class RegistroPontoRepository : IRegistroPontoRepository
             // Pega o primeiro (que será o mais recente) ou null se não houver nenhum
             .FirstOrDefaultAsync();
     }
+    public async Task<IEnumerable<RegistroPonto>> ObterHistoricoUsuarioAsync(int usuarioId)
+    {
+        return await _context.RegistrosPonto
+            .Where(r => r.UsuarioId == usuarioId)
+            .OrderByDescending(r => r.Timestamp)
+            .ToListAsync();
+    }
 }
